@@ -6,6 +6,7 @@
 package decisiontree;
 
 import java.io.IOException;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.classifiers.trees.Id3;
@@ -24,18 +25,24 @@ public class Main {
     public static void main(String[] args) throws IOException, Exception {
         // TODO code application logic here
 
+        // Testing Interface
+        
         Instances data = WekaInterface.loadDataset("contact-lenses.arff");
 //        System.out.println(data);
 //        System.out.println("");
 
-//        Id3 SimpleId3 = WekaInterface.createAndTrainId3(data);        
-//        System.out.println(SimpleId3.toString());
+        Id3 SimpleId3 = WekaInterface.createAndTrainId3(data);        
+        System.out.println(SimpleId3.toString());
 
-        J48 SimpleJ48 = WekaInterface.createAndTrainJ48(data);
-        System.out.println(SimpleJ48.toString());
+        WekaInterface.saveModel(SimpleId3, "testSave.model");
         
-        Evaluation eval = WekaInterface.evaluateModelWithInstances(SimpleJ48, data);
-        System.out.println(eval.toMatrixString());
+        Classifier LoadId3 = (Id3) WekaInterface.loadModel("testSave.model");
+        
+        Evaluation eval = WekaInterface.evaluateModel10Cross(LoadId3, data);
+        
+        System.out.println(eval.toSummaryString());
+        
+        
         
     }
     
