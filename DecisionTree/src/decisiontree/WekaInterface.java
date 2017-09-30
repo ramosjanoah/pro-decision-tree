@@ -14,6 +14,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import static java.util.Objects.isNull;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Debug.Random;
@@ -117,16 +120,95 @@ public class WekaInterface {
     
     public static void changeMissingValueToCommonValue(Instances data) {
         Enumeration instanceEnumerate = data.enumerateInstances();
-        Enumeration attributeEnumerate = data.enumerateAttributes();
+        HashMap mostMap = mostCommonInstancesMap(data);
+
         while (instanceEnumerate.hasMoreElements()) {
+            Enumeration attributeEnumerate = data.enumerateAttributes();
             Instance datum = (Instance) instanceEnumerate.nextElement();
+            
+            // # System.out.println(datum.toString());
+            double classOfInstance = datum.classValue();
+            // # System.out.println("Class = " + classOfInstance); 
+
             while (attributeEnumerate.hasMoreElements()) {
                 Attribute att = (Attribute) attributeEnumerate.nextElement();
-                // undone
-                // ...
-                // ...
+                   
+                if (Double.isNaN(datum.value(att))) {
+                    // # Change to most common value
+                    double attributeIndexMissing = att.index();
+                    Instances mostCommonInstance = (Instances) mostMap.get(classOfInstance);
+                    datum.setValue(att, mostCommonInstance.firstInstance().value(att));
+                    // System.out.println(datum.toString());
+                }
             }
+            // # System.out.println("");
         }
-    }    
+    }
     
+    public static HashMap mostCommonInstancesMap(Instances data) {
+        data.sort(data.classIndex());
+        Enumeration instanceEnumerate = data.enumerateInstances();
+        double classIndex = data.firstInstance().classValue();
+        Instances subDataset = new Instances(data, data.numInstances());
+        HashMap subDatasetHash = new HashMap();
+        
+        while (instanceEnumerate.hasMoreElements()){
+            Instance datum = (Instance) instanceEnumerate.nextElement();
+            if (classIndex != datum.classValue()) {
+                subDatasetHash.put(classIndex, subDataset);
+                classIndex = datum.classValue();
+                subDataset = new Instances(data, data.numInstances());
+            } 
+            subDataset.add(datum);
+        }
+        subDatasetHash.put(classIndex, subDataset);        
+
+        subDataset = (Instances) subDatasetHash.get(1.0); 
+        // System.out.println(subDataset.toString());
+        
+        // System.out.println(subDataset.attributeStats(0));
+        HashMap temp = new HashMap();
+        for (double idxClass = 0.0; idxClass < data.numClasses(); idxClass++) {
+            // System.out.println("----" + idxClass + "----");
+            subDataset = (Instances) subDatasetHash.get(idxClass);
+            Enumeration attributeEnumerate = subDataset.enumerateAttributes();
+            while (attributeEnumerate.hasMoreElements()) {
+                temp = new HashMap();
+                Attribute att = (Attribute) attributeEnumerate.nextElement();
+                instanceEnumerate = subDataset.enumerateInstances();
+                while (instanceEnumerate.hasMoreElements()) {
+                    Instance datum = (Instance) instanceEnumerate.nextElement();
+                    if (!Double.isNaN(datum.value(att))) {
+                        if (!temp.containsKey(datum.value(att))) {
+                            temp.put(datum.value(att), 1);
+                        } else {
+                            int num = (int) temp.get(datum.value(att)) + 1;
+                            temp.put(datum.value(att), num);
+                        }
+                    }
+                }                
+
+                Iterator keySetIterator = temp.keySet().iterator();
+                double maxIndex = (double)keySetIterator.next();
+                double key = -99;
+                while (keySetIterator.hasNext()) {
+                    key = (double)keySetIterator.next();
+                    int keyValue = (int)temp.get(key);  
+                    int maxIndexValue = (int)temp.get(maxIndex);
+                    if (keyValue > maxIndexValue) {
+                        maxIndex = key;
+                    }
+                }
+                temp.put(-1.0, maxIndex);
+                // System.out.println(temp);
+                subDataset.firstInstance().setValue(att, maxIndex);
+                // System.out.println();
+
+            }
+            Instances subDatasetTemp = new Instances(data, data.numInstances());
+            subDatasetTemp.add(subDataset.firstInstance());
+            subDatasetHash.put(idxClass, subDatasetTemp);
+        }
+        return subDatasetHash;
+    }    
 }

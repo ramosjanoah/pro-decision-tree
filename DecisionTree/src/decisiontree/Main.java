@@ -5,13 +5,23 @@
  */
 package decisiontree;
 
+import java.awt.RenderingHints.Key;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import static jdk.nashorn.internal.objects.NativeArray.map;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.classifiers.trees.Id3;
 import weka.classifiers.trees.J48;
 import weka.core.Instance;
+import weka.core.Attribute;
 
 /**
  *
@@ -29,26 +39,6 @@ public class Main {
         Instances data = WekaInterface.loadDataset("contact-lenses.arff");
         Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");
         
-        WekaInterface.changeMissingValueToCommonValue(data);
-//        System.out.println(dataMissing.firstInstance());
-//        System.out.println(dataMissing.firstInstance().isMissing(0));
-        
-        
-        
-        // Print Data test
-        // System.out.println(data.toString());
-        
-        // Construction
-        // myID3 tree = new myID3();
-        
-        // Training
-        // tree.buildClassifier(data);
-        
-        // Evaluating with data training
-        // Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
-        // Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, data);
-
-        // Print evaluation summary
-        // System.out.println(eval10CrossValidation.toSummaryString());
+        WekaInterface.changeMissingValueToCommonValue(dataMissing);
     }
 }
