@@ -39,16 +39,17 @@ public class Main {
         // System.out.println(data.toString());
         
         // Construction
-        // myID3 tree = new myID3();
+         myID3 tree = new myID3();
+         myC45 tree2 = new myC45();
         
         // Training
-        // tree.buildClassifier(data);
+         tree2.buildClassifier(data);
         
         // Evaluating with data training
         // Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
-        // Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, data);
+         Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree2, 10, data);
 
         // Print evaluation summary
-        // System.out.println(eval10CrossValidation.toSummaryString());
+         System.out.println(eval10CrossValidation.toSummaryString());
     }
 }

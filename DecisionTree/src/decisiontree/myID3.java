@@ -5,7 +5,6 @@ import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.NoSupportForMissingValuesException;
 import weka.core.Utils;
 
 public class myID3 extends Classifier {
@@ -20,11 +19,11 @@ public class myID3 extends Classifier {
 
         double entropy = getEntropy(data);
         double remainder = 0;
-        Instances[] new_data = getNewData(data, attribute);
+        Instances[] split_data = splitData(data, attribute);
     
         for (int i = 0; i < attribute.numValues(); i++) {
-            if (new_data[i].numInstances() > 0) {
-                remainder += ((double)new_data[i].numInstances() / (double)data.numInstances()) * getEntropy(new_data[i]);
+            if (split_data[i].numInstances() > 0) {
+                remainder += ((double)split_data[i].numInstances() / (double)data.numInstances()) * getEntropy(split_data[i]);
             }
         }
     
@@ -51,20 +50,20 @@ public class myID3 extends Classifier {
         return entropy + Utils.log2(data.numInstances());
     }
   
-    protected Instances[] getNewData(Instances data, Attribute attribute) {
-        Instances[] new_data = new Instances[attribute.numValues()];
+    protected Instances[] splitData(Instances data, Attribute attribute) {
+        Instances[] split_data = new Instances[attribute.numValues()];
     
         for (int i = 0; i < attribute.numValues(); i++) {
-            new_data[i] = new Instances(data, data.numInstances());
+            split_data[i] = new Instances(data, data.numInstances());
         }
     
         Enumeration enum_instance = data.enumerateInstances();
         while (enum_instance.hasMoreElements()) {
             Instance instance = (Instance) enum_instance.nextElement();
-            new_data[(int)instance.value(attribute)].add(instance);
+            split_data[(int)instance.value(attribute)].add(instance);
         }
         
-        return new_data;
+        return split_data;
     }
   
     protected void makeTree(Instances data) throws Exception {
@@ -90,12 +89,12 @@ public class myID3 extends Classifier {
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
         } else {
-            Instances[] new_data = getNewData(data, chosen_attribute);
+            Instances[] split_data = splitData(data, chosen_attribute);
             subtrees = new myID3[chosen_attribute.numValues()];
 
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myID3();
-                subtrees[i].makeTree(new_data[i]);
+                subtrees[i].makeTree(split_data[i]);
             }
         }
     }
