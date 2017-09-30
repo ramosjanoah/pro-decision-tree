@@ -28,21 +28,27 @@ public class Main {
         
         Instances data = WekaInterface.loadDataset("contact-lenses.arff");
         Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");
-
+        
+        WekaInterface.changeMissingValueToCommonValue(data);
+//        System.out.println(dataMissing.firstInstance());
+//        System.out.println(dataMissing.firstInstance().isMissing(0));
+        
+        
+        
         // Print Data test
-        System.out.println(data.toString());
+        // System.out.println(data.toString());
         
         // Construction
-        myID3 tree = new myID3();
+        // myID3 tree = new myID3();
         
         // Training
-        tree.buildClassifier(data);
+        // tree.buildClassifier(data);
         
         // Evaluating with data training
-        Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
-        Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, data);
+        // Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
+        // Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, data);
 
         // Print evaluation summary
-        System.out.println(eval10CrossValidation.toSummaryString());
+        // System.out.println(eval10CrossValidation.toSummaryString());
     }
 }

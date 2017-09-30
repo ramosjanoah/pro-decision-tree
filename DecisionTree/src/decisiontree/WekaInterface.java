@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Enumeration;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Debug.Random;
@@ -22,14 +23,14 @@ import weka.core.converters.ConverterUtils.DataSource;
 /**
  *
  * Spesifikasi Interface:
- *      - Mulai dari load data (arrf dan csv)                           (done)
- *      - Remove atribute                                               (done)           
- *      - Filter : Resample                                             (gajelas)
- *      - Build classifier : DT                                         (done)
- *      - Testing model given test set                                  (done)
+ *      - Mulai dari load data (arrf dan csv)                           
+ *      - Remove atribute                                               
+ *      - Filter : Resample                                             
+ *      - Build classifier : DT                                         
+ *      - Testing model given test set                                  
  *      - 10-fold cross validation, percentage split, training-test     (tinggal percentage split)
- *      - Save/Load Model                                               (done)
- *      - Using model to classify one unseen data (input data,1 doang?) (done) 
+ *      - Save/Load Model                                               
+ *      - Using model to classify one unseen data (input data,1 doang?) 
  * 
  * 
  * @author ramosjanoah
@@ -76,12 +77,6 @@ public class WekaInterface {
         return classifier;        
     }
     
-    public static Evaluation evaluateModelWithInstances(Classifier model, Instances data) throws Exception {
-        Evaluation eval = new Evaluation(data);
-        eval.evaluateModel(model, data);        
-        return eval;
-    }
-    
     public static void saveModel(Classifier model, String filename) throws Exception{
         SerializationHelper.write("model/" + filename, model);        
     }
@@ -94,16 +89,44 @@ public class WekaInterface {
         return model.classifyInstance(instance);
     }
     
+    public static Evaluation evaluateModelWithInstances(Classifier model, Instances data) throws Exception {
+        Evaluation eval = new Evaluation(data);
+        eval.evaluateModel(model, data);        
+        return eval;
+    }
+
     public static Evaluation evaluateModelCrossValidation(Classifier model, Integer fold, Instances data) throws Exception {
         Evaluation eval = new Evaluation(data);
         eval.crossValidateModel(model, data, fold, new Random(1));
         return eval;
     }
     
-    public static Evaluation evaluateModelPercentageSplit(Instances data) throws Exception {
-        // undone
-        return new Evaluation(data);
+    public static Evaluation evaluateModelPercentageSplit(Classifier model, double percentage, Instances data) throws Exception {
+        int trainSize = (int) Math.round(data.numInstances() * 0.8);
+        int testSize = data.numInstances() - trainSize;
+        Instances train = new Instances(data, 0, trainSize);
+        Instances test = new Instances(data, trainSize, testSize);
+        model.buildClassifier(train);
+        
+        return evaluateModelWithInstances(model, test);
     }
     
+    public static Instances resampleInstances(Instances data) {
+        return data.resample(new Random(1));
+    }
+    
+    public static void changeMissingValueToCommonValue(Instances data) {
+        Enumeration instanceEnumerate = data.enumerateInstances();
+        Enumeration attributeEnumerate = data.enumerateAttributes();
+        while (instanceEnumerate.hasMoreElements()) {
+            Instance datum = (Instance) instanceEnumerate.nextElement();
+            while (attributeEnumerate.hasMoreElements()) {
+                Attribute att = (Attribute) attributeEnumerate.nextElement();
+                // undone
+                // ...
+                // ...
+            }
+        }
+    }    
     
 }
