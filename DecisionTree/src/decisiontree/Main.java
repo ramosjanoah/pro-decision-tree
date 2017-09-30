@@ -25,7 +25,7 @@ public class Main {
     public static void main(String[] args) throws IOException, Exception {
         // TODO code application logic here
         
-        //Evaluation eval;
+        Evaluation eval;
 
         // Testing Interface
         
@@ -35,15 +35,32 @@ public class Main {
 
         Id3 SimpleId3 = WekaInterface.createAndTrainId3(data);        
 
+//        J48 SimpleJ48 = WekaInterface.createAndTrainJ48(data);
+//        System.out.println(SimpleJ48.toString());
+        
+        myID3 tree = new myID3();
+        tree.buildClassifier(data);
+        eval = WekaInterface.evaluateModelWithInstances(tree, data);
+        System.out.println(eval.toSummaryString());
+        eval = WekaInterface.evaluateModelWithInstances(SimpleId3, data);
+        System.out.println(eval.toSummaryString());        
+
+
+
+        System.out.println(tree.toString());
         System.out.println(SimpleId3.toString());
 
-        WekaInterface.saveModel(SimpleId3, "testSave.model");
+//        System.out.println(SimpleId3.toString());
+//
+//        WekaInterface.saveModel(SimpleId3, "testSave.model");
+//        
+//        Classifier LoadId3 = (Id3) WekaInterface.loadModel("testSave.model");
+//        
+//        eval = WekaInterface.evaluateModel10Cross(LoadId3, data);
+//        
+//        System.out.println(eval.toSummaryString());
         
-        Classifier LoadId3 = (Id3) WekaInterface.loadModel("testSave.model");
-        
-        Evaluation eval = WekaInterface.evaluateModel10Cross(LoadId3, data);
-        
-        System.out.println(eval.toSummaryString());
+
         
         
     }
