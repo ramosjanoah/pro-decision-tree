@@ -43,11 +43,11 @@ public class Main {
          myC45 tree2 = new myC45();
         
         // Training
-         tree2.buildClassifier(data);
+         tree.buildClassifier(dataMissing);
         
         // Evaluating with data training
         // Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
-         Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree2, 10, data);
+         Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, dataMissing);
 
         // Print evaluation summary
          System.out.println(eval10CrossValidation.toSummaryString());

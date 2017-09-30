@@ -5,6 +5,7 @@ import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.NoSupportForMissingValuesException;
 import weka.core.Utils;
 
 public class myID3 extends Classifier {
@@ -99,7 +100,11 @@ public class myID3 extends Classifier {
         }
     }
   
-    public double classifyInstance(Instance instance) {
+    public double classifyInstance(Instance instance) throws NoSupportForMissingValuesException{
+        if (instance.hasMissingValue()) {
+            throw new NoSupportForMissingValuesException("myID3 not support missing values");
+        }
+        
         if (chosen_attribute == null) {
             return class_value;
         } else {
