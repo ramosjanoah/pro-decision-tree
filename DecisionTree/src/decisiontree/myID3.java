@@ -10,15 +10,13 @@ import weka.core.Utils;
 
 public class myID3 extends Classifier {
     
-    private Attribute chosen_attribute;
-    private Attribute class_attribute;
-    private double class_value;
-    private double[] class_distribution;
-    private myID3[] subtrees;
-    private int max_level;
-    private int level = 0;
+    protected Attribute chosen_attribute;
+    protected Attribute class_attribute;
+    protected double class_value;
+    protected double[] class_distribution;
+    protected myID3[] subtrees;
 
-    private double getInformationGain(Instances data, Attribute attribute) {
+    protected double getInformationGain(Instances data, Attribute attribute) {
 
         double entropy = getEntropy(data);
         double remainder = 0;
@@ -33,7 +31,7 @@ public class myID3 extends Classifier {
         return entropy - remainder;
     }
   
-    private double getEntropy(Instances data) {
+    protected double getEntropy(Instances data) {
 
         double[] number_classes = new double[data.numClasses()];
         Enumeration enum_instance = data.enumerateInstances();
@@ -53,7 +51,7 @@ public class myID3 extends Classifier {
         return entropy + Utils.log2(data.numInstances());
     }
   
-    private Instances[] getNewData(Instances data, Attribute attribute) {
+    protected Instances[] getNewData(Instances data, Attribute attribute) {
         Instances[] new_data = new Instances[attribute.numValues()];
     
         for (int i = 0; i < attribute.numValues(); i++) {
@@ -69,7 +67,7 @@ public class myID3 extends Classifier {
         return new_data;
     }
   
-    private void makeTree(Instances data) throws Exception {
+    protected void makeTree(Instances data) throws Exception {
         double[] information_gains = new double[data.numAttributes()];
         
         Enumeration enum_attribute = data.enumerateAttributes();
@@ -92,36 +90,12 @@ public class myID3 extends Classifier {
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
         } else {
-            if (level == max_level) {
-                chosen_attribute = null;
-                class_distribution = new double[data.numClasses()];
+            Instances[] new_data = getNewData(data, chosen_attribute);
+            subtrees = new myID3[chosen_attribute.numValues()];
 
-                Enumeration enum_instance = data.enumerateInstances();
-                while (enum_instance.hasMoreElements()) {
-                    Instance instance = (Instance) enum_instance.nextElement();
-                    class_distribution[(int)instance.classValue()]++;
-                }
-                
-                double count_class_value = 0;
-                int index_chosen_class = -1;
-                for (int i = 0; i < data.numClasses(); i++) {
-                    if (class_distribution[i] > count_class_value) {
-                        count_class_value = class_distribution[i];
-                        index_chosen_class = i;
-                    }
-                }
-                class_value = class_distribution[index_chosen_class];
-                class_attribute = data.classAttribute();
-            } else {
-                Instances[] new_data = getNewData(data, chosen_attribute);
-                subtrees = new myID3[chosen_attribute.numValues()];
-
-                for (int i = 0; i < chosen_attribute.numValues(); i++) {
-                    subtrees[i] = new myID3();
-                    subtrees[i].makeTree(new_data[i]);
-                }
-                
-                level++;
+            for (int i = 0; i < chosen_attribute.numValues(); i++) {
+                subtrees[i] = new myID3();
+                subtrees[i].makeTree(new_data[i]);
             }
         }
     }
@@ -136,7 +110,6 @@ public class myID3 extends Classifier {
     }
   
     public void buildClassifier(Instances data) throws Exception {
-        max_level = data.numAttributes() - 1;
         makeTree(data);
     }
   
@@ -148,7 +121,7 @@ public class myID3 extends Classifier {
         return "Id3\n\n" + toString(0);
     }
   
-    private String toString(int level) {
+    protected String toString(int level) {
 
         StringBuffer text = new StringBuffer();
 
