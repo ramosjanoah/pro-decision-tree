@@ -27,6 +27,8 @@ public class myC45 extends Classifier {
     // array yang berisi jumlah setiap label yang mungkin dari suatu leaf -> untuk menentukan label dari leaf jika 
     // label yang dihasilkan tidak konsisten
     protected double[] class_distribution;
+    // threshold hashmap.
+    protected HashMap threshold_for_continous;
     // tree penerus dari suatu node
     protected myC45[] subtrees;
     //The rules used for pruning
@@ -91,7 +93,7 @@ public class myC45 extends Classifier {
 
     
     protected void makeThreshold(Instances data) {
-        // build threshold
+        // build threshold_for_contunous
         threshold_for_continous = new HashMap();
         Enumeration attEnumerate = data.enumerateAttributes();
         while (attEnumerate.hasMoreElements()) {
@@ -123,7 +125,7 @@ public class myC45 extends Classifier {
     }
   
     protected Instances[] splitData(Instances data, Attribute attribute) {
-<<<<<<< HEAD
+        // split datanya gua ubah, jadi kalo type = 0 (numeric), dia bakal ngesplit berdasarkan threshold
         if (attribute.type() == 0) {
             int indexAttribute = attribute.index();
             Instances[] split_data = new Instances[2];
@@ -159,21 +161,6 @@ public class myC45 extends Classifier {
             }
 
             return split_data;
-=======
-        // splitData memisahkan data untuk atribut tertentu
-        // menghasilkan data dengan nilai atribut yang sama, misal data[1] nilai atributnya 'sunny' semua,
-        // data[2] nilai atributnya 'rainy' semua
-        Instances[] split_data = new Instances[attribute.numValues()];
-    
-        for (int i = 0; i < attribute.numValues(); i++) {
-            split_data[i] = new Instances(data, data.numInstances());
-        }
-    
-        Enumeration enum_instance = data.enumerateInstances();
-        while (enum_instance.hasMoreElements()) {
-            Instance instance = (Instance) enum_instance.nextElement();
-            split_data[(int)instance.value(attribute)].add(instance);
->>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
         }
     }
     
@@ -181,6 +168,8 @@ public class myC45 extends Classifier {
         Instances[] split_data = splitData(data, attribute);
         double split_information = 0;
         int end;
+        
+        // kalau atribute nya numeric, hanya ke split menjadi 2
         if (attribute.type() != 0) {
             end = attribute.numValues();
         } else {
@@ -199,12 +188,14 @@ public class myC45 extends Classifier {
     }
   
     protected void makeTree(Instances data, String method) throws Exception {
-        //System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
-//        System.out.println(data.toString());
+        // System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
+        // System.out.println(data.toString());
         double[] gains = new double[data.numAttributes()];
 
+        // change missing value to common value
         Instances data_without_missing = new Instances(data); // -r
         WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
+        
         if (method == "information-gain") {
             double[] information_gains = new double[data.numAttributes()];
         }
@@ -224,22 +215,12 @@ public class myC45 extends Classifier {
                 }
             }
         }
-<<<<<<< HEAD
 
-        chosen_attribute = data.attribute(Utils.maxIndex(gains));
-        System.out.println("-----------");
-        System.out.println("numInstance : " + data.numInstances());
-        for (int i = 0; i < data.numAttributes(); i++) {
-            System.out.println(i + " : " + gains[i]);
-        }
-        System.out.println("choosen : " + chosen_attribute.index());
-
-=======
         // node yang dipilih merupakan node dengan nilai IG atau gain-ratio terbesar
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
     
         // jika nilai IG atau gain-ratio nya 0 -> dijadikan leaf
->>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
+
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()];
@@ -252,12 +233,12 @@ public class myC45 extends Classifier {
             // nilai leafnya merupakan max dari semua nilai leaf yang mungkin
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
-        } else { 
+        } else {
             // jika bukan leaf, cari lagi atribut terpilih dengan data yang sudah dikelompokkan
             // berdasarkan atribut yang terpilih jadi node
             Instances[] split_data = splitData(data, chosen_attribute);
-<<<<<<< HEAD
 
+            // sekarang dipisah, kalau type = 0 alias numeric, dia ngesplit berdasarkan threshold
             if (chosen_attribute.type() == 0) {
                 this.subtrees = new myC45[2];
                 for (int i = 0; i < 2; i++) {
@@ -273,14 +254,13 @@ public class myC45 extends Classifier {
                     subtrees[i].threshold_for_continous = this.threshold_for_continous;
                     subtrees[i].makeTree(split_data[i], method);
                 }                
-=======
             this.subtrees = new myC45[chosen_attribute.numValues()];
             
             // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myC45();
                 subtrees[i].makeTree(split_data[i], method);
->>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
+            }
             }
         }
     }
