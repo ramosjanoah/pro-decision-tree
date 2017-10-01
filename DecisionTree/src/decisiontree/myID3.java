@@ -8,6 +8,7 @@ import weka.core.Instances;
 import weka.core.NoSupportForMissingValuesException;
 import weka.core.Utils;
 
+@SuppressWarnings("ALL")
 public class myID3 extends Classifier {
     
     protected Attribute chosen_attribute;
@@ -79,7 +80,7 @@ public class myID3 extends Classifier {
             information_gains[attribute.index()] = getInformationGain(data, attribute); 
         }
         chosen_attribute = data.attribute(Utils.maxIndex(information_gains));
-        System.out.println(information_gains[chosen_attribute.index()]);
+//        System.out.println(information_gains[chosen_attribute.index()]);
     
         if (Utils.eq(information_gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;

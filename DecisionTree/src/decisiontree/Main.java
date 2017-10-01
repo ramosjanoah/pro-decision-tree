@@ -36,12 +36,19 @@ public class Main {
     public static void main(String[] args) throws IOException, Exception {
         // TODO code application logic here        
         Evaluation eval;
-        
+
         Instances data = WekaInterface.loadDataset("contact-lenses.arff");
-        Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");        
+        Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");
 
         // Construction
-        myID3 tree = new myID3();
+        myID3 id3 = new myID3();
+        myC45 c45 = new myC45();
+        id3.buildClassifier(data);
+        c45.buildClassifier(data);
+        System.out.println(c45);
+//        c45.get_rules();
+//        c45.print_rules();
+//        System.out.println("DONE BUILDING");
                
         
         // -----------------------------------------
@@ -50,4 +57,5 @@ public class Main {
         WekaInterface.myDiscretize(data, 1, 2.0);
 
     }
+
 }

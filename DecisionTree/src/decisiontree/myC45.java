@@ -5,17 +5,22 @@
  */
 package decisiontree;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
-import weka.core.Attribute;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.Utils;
+
+import decisiontree.c45.Rule;
+import weka.core.*;
 
 /**
  *
  * @author ramosjanoah
  */
+@SuppressWarnings("ALL")
 public class myC45 extends myID3 {
+
+    protected myC45[] subtrees;
+    //The rules used for pruning
+    private ArrayList<Rule> rules;
 
     public double getSplitInformation(Instances data, Attribute attribute) {
         Instances[] split_data = splitData(data, attribute);
@@ -65,17 +70,95 @@ public class myC45 extends myID3 {
             class_attribute = data.classAttribute();
         } else {
             Instances[] split_data = splitData(data, chosen_attribute);
-            subtrees = new myID3[chosen_attribute.numValues()];
+            this.subtrees = new myC45[chosen_attribute.numValues()];
 
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
-                subtrees[i] = new myID3();
-                subtrees[i].makeTree(data);
+                subtrees[i] = new myC45();
+                subtrees[i].makeTree(split_data[i]);
             }
+        }
+    }
+
+    private ArrayList<Rule> get_rules_from_tree(Rule preceding_rule) {
+        System.out.println("PREC " + preceding_rule);
+        if (chosen_attribute == null) {
+            preceding_rule.set_classified_value(class_value);
+            ArrayList<Rule> current_rules = new ArrayList<>();
+            current_rules.add(preceding_rule);
+            return current_rules;
+        } else {
+            System.out.println("Iterating subtrees (" + subtrees.length + ")");
+            for (int i = 0; i < subtrees.length; ++i) {
+                myC45 c45 = subtrees[i];
+                System.out.println("> " + i + " " + chosen_attribute.name() + " " + chosen_attribute.index());
+                preceding_rule.add_node_rule(chosen_attribute.index(), (double)i);
+                Rule current_rule = preceding_rule;
+                rules.addAll(c45.get_rules_from_tree(current_rule));
+            }
+            return rules;
+        }
+    }
+
+    public void get_rules() {
+        rules = get_rules_from_tree(new Rule());
+    }
+
+    public void prune() {
+
+    }
+
+    public void print_rules() {
+        for(Rule rule : rules) {
+            System.out.println(rule);
         }
     }
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
           makeTree(data,"information-gain");
-    }    
+    }
+
+    public double classifyInstance(Instance instance) throws NoSupportForMissingValuesException {
+        if (instance.hasMissingValue()) {
+            throw new NoSupportForMissingValuesException("myID3 not support missing values");
+        }
+
+        if (chosen_attribute == null) {
+            return class_value;
+        } else {
+            return subtrees[(int)instance.value(chosen_attribute)].
+                    classifyInstance(instance);
+        }
+    }
+
+    public String toString() {
+
+        if ((class_distribution == null) && (subtrees == null)) {
+            return "Id3: No model built yet.";
+        }
+        return "Id3\n\n" + toString(0);
+    }
+
+    protected String toString(int level) {
+
+        StringBuffer text = new StringBuffer();
+
+        if (chosen_attribute == null) {
+            if (Instance.isMissingValue(class_value)) {
+                text.append(": null");
+            } else {
+                text.append(": " + class_attribute.value((int) class_value));
+            }
+        } else {
+            for (int j = 0; j < chosen_attribute.numValues(); j++) {
+                text.append("\n");
+                for (int i = 0; i < level; i++) {
+                    text.append("|  ");
+                }
+                text.append(chosen_attribute.name() + " = " + chosen_attribute.value(j));
+                text.append(this.subtrees[j].toString(level + 1));
+            }
+        }
+        return text.toString();
+    }
 }
