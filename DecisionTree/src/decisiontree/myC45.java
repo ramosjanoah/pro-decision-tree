@@ -1,6 +1,8 @@
 package decisiontree;
 
 import java.util.Enumeration;
+
+import decisiontree.c45.Rules;
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
@@ -8,6 +10,7 @@ import weka.core.Instances;
 import weka.core.Utils;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Random;
 
 import decisiontree.c45.Rule;
 import java.util.HashMap;
@@ -32,7 +35,7 @@ public class myC45 extends Classifier {
     // tree penerus dari suatu node
     protected myC45[] subtrees;
     //The rules used for pruning
-    private ArrayList<Rule> rules = new ArrayList<>();
+    private Rules rules = new Rules();
 
     protected double getInformationGain(Instances data, Attribute attribute) {
         double entropy = getEntropy(data);
@@ -265,63 +268,80 @@ public class myC45 extends Classifier {
         }
     }
     
-    private ArrayList<Rule> get_rules_from_tree(Rule preceding_rule) {
+    private Rules get_rules_from_tree(Rule preceding_rule) {
         if (chosen_attribute == null) {
             Rule current_rule = new Rule(preceding_rule);
             current_rule.set_classified_value(class_value);
             ArrayList<Rule> current_rules = new ArrayList<>();
             current_rules.add(current_rule);
-            return current_rules;
+            return new Rules(current_rules);
         } else {
             for (int i = 0; i < subtrees.length; ++i) {
                 myC45 c45 = subtrees[i];
                 Rule current_rule = new Rule(preceding_rule);
                 current_rule.add_node_rule(chosen_attribute.index(), (double)i);
-                ArrayList<Rule> results = (ArrayList) c45.get_rules_from_tree(current_rule).clone();
-                rules.addAll(results);
+                ArrayList<Rule> results = (ArrayList) c45.get_rules_from_tree(current_rule).get_arraylist().clone();
+                rules.get_arraylist().addAll(results);
             }
             return rules;
         }
     }
-  
-    public double classifyInstance(Instance instance){
-        if (chosen_attribute == null) {
-            return class_value;
-        } else {
-            if (chosen_attribute.type() == 0) {
-                if (instance.value(chosen_attribute) > (double) threshold_for_continous.get(chosen_attribute.index())) {
-                    return subtrees[1].classifyInstance(instance);
-                } else {
-                    return subtrees[0].classifyInstance(instance);
-                }
-            } else {
-                return subtrees[(int)instance.value(chosen_attribute)].
-                classifyInstance(instance);
+
+    public double classifyInstance(Instance instance) {
+        for (Rule rule : rules.get_arraylist()) {
+            if (rule.is_match(instance)) {
+                return rule.get_classified_value();
             }
         }
-    }
-    
-    public void get_rules() {
-        rules = get_rules_from_tree(new Rule());
+        return -1.0;
     }
 
-    public void prune() {
+    public void prune(Instances data_validation) {
 
     }
 
     public void print_rules() {
         System.out.println("RULES: ");
-        for(Rule rule : rules) {
+        for(Rule rule : rules.get_arraylist()) {
             System.out.println(" > " + rule);
         }
     }
-  
+
     public void buildClassifier(Instances data) throws Exception {
-        makeThreshold(data);
-        System.out.println(threshold_for_continous);
-        makeTree(data, "gain-ratio");
+        Random random = new Random(0);
+        data = data.resample(random);
+
+        //trian and test percentage
+        double train_pct = 0.5;
+        double test_pct = 0.25;
+
+        int train_size = (int) Math.round(data.numInstances() * train_pct);
+        int test_size = (int) Math.round(data.numInstances() * test_pct);
+        int validation_size = data.numInstances() - train_size - test_size;
+
+        // engineer train test and validation dataset
+        Instances data_train = new Instances(data, 0, train_size);
+        Instances data_test = new Instances(data, train_size, test_size);
+        Instances data_validation = new Instances(data, train_size + test_size, validation_size);
+        
+        System.out.println("Building classifier with:");
+        System.out.println(" > Training size  : " + train_size);
+        System.out.println(" > Validation size: " + validation_size);
+        System.out.println(" > Testing  size  : " + test_size);
+
+        //build the tree and rule
+        makeThreshold(data_train);
+        makeTree(data_train, "gain-ratio");
+        rules = get_rules_from_tree(new Rule());
+        System.out.println("BEFORE:");
+        print_rules();
+        rules.sort();
+        System.out.println("AFTER:");
+        print_rules();
+
+        prune(data_validation);
     }
-  
+
     public String toString() {
 
         if ((class_distribution == null) && (subtrees == null)) {

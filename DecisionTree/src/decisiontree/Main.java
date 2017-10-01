@@ -48,9 +48,9 @@ public class Main {
         myC45 c45 = new myC45();
         c45.buildClassifier(weather_numeric);
 
-        eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
-        System.out.println(eval.toSummaryString());
+        // eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
+        // System.out.println(eval.toSummaryString());
+
 
     }
-
 }
