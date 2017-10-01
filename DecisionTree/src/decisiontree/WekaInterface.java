@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import static java.util.Objects.isNull;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -267,7 +268,7 @@ public class WekaInterface {
         Instance datum;
         Instance next;
         
-        iris.sort(idxToDiscretize);
+        data.sort(idxToDiscretize);
 
         Enumeration instanceEnumerate = data.enumerateInstances();
         datum = (Instance) instanceEnumerate.nextElement();
@@ -309,6 +310,15 @@ public class WekaInterface {
         return maxCandidate;
     }
     
-    
-    
+    public static void myDiscretize(Instances data, int attIndex, double splitPoint) {
+        ArrayList<String> nominal_values = new ArrayList(2); 
+        nominal_values.add("below_split"); 
+        nominal_values.add("above_split"); 
+        
+        // undone...
+        // you should call splitPoint()
+        // ..
+        // ..
+        
+    }
 }
