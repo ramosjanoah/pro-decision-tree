@@ -36,6 +36,7 @@ public class myC45 extends Classifier {
     protected myC45[] subtrees;
     //The rules used for pruning
     private Rules rules = new Rules();
+    private Instances data_validation;
 
     protected double getInformationGain(Instances data, Attribute attribute) {
         double entropy = getEntropy(data);
@@ -297,7 +298,7 @@ public class myC45 extends Classifier {
     }
 
     public void prune(Instances data_validation) {
-
+        
     }
 
     public void print_rules() {
@@ -312,7 +313,7 @@ public class myC45 extends Classifier {
         data = data.resample(random);
 
         //trian and test percentage
-        double train_pct = 0.7;
+        double train_pct = 0.9;
 
         int train_size = (int) Math.round(data.numInstances() * train_pct);
         int validation_size = data.numInstances() - train_size;
@@ -329,11 +330,9 @@ public class myC45 extends Classifier {
         makeThreshold(data_train);
         makeTree(data_train, "gain-ratio");
         rules = get_rules_from_tree(new Rule());
-        System.out.println("BEFORE:");
         print_rules();
-        rules.sort();
-        System.out.println("AFTER:");
-        print_rules();
+
+        System.out.println("ACC: " + rules.get_accuracy(data_validation));
 
         prune(data_validation);
     }

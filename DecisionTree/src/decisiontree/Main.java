@@ -23,6 +23,8 @@ import weka.classifiers.trees.Id3;
 import weka.classifiers.trees.J48;
 import weka.core.Instance;
 import weka.core.Attribute;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.NumericToNominal;
 
 /**
  *
@@ -46,11 +48,14 @@ public class Main {
         // Construction
         myID3 id3 = new myID3();
         myC45 c45 = new myC45();
-        c45.buildClassifier(weather_numeric);
+
+        NumericToNominal numericToNominal = new NumericToNominal();
+        numericToNominal.setInputFormat(weather_numeric);
+        Instances nominal_weather_numeric = Filter.useFilter(weather_numeric, numericToNominal);
+        System.out.println(nominal_weather_numeric);
+        id3.buildClassifier(nominal_weather_numeric);
 
         // eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
         // System.out.println(eval.toSummaryString());
-
-
     }
 }

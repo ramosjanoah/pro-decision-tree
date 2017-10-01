@@ -37,6 +37,10 @@ public class Rule {
         this.nodes_rule.put(attribute_index, value);
     }
 
+    public HashMap<Integer, Double> get_nodes_rule() {
+        return nodes_rule;
+    }
+
     public void set_classified_value(double classified_value) {
         this.classified_value = classified_value;
     }
@@ -47,6 +51,7 @@ public class Rule {
         Iterator it = new_nodes_rule.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
+//            System.out.println(" | " + instance.value((int)pair.getKey()) + ", " + pair.getValue());
             if (instance.value((int)pair.getKey()) != (double)pair.getValue()) {
                 return false;
             }
