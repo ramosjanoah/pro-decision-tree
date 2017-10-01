@@ -46,13 +46,10 @@ public class Main {
         // Construction
         myID3 id3 = new myID3();
         myC45 c45 = new myC45();
-        weather_numeric.sort(1);
-        System.out.println(weather_numeric);
-        weather_numeric.sort(2);
-        System.out.println(weather_numeric);
         c45.buildClassifier(weather_numeric);
 
-        System.out.println(c45);        
+        eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
+        System.out.println(eval.toSummaryString());
 
     }
 

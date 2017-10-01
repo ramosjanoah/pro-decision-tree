@@ -191,7 +191,9 @@ public class myC45 extends Classifier {
 
         // change missing value to common value
         Instances data_without_missing = new Instances(data); // -r
-        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
+        if (data.numInstances() > 0) {
+            WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
+        }
         
         if (method == "information-gain") {
             double[] information_gains = new double[data.numAttributes()];
@@ -240,7 +242,7 @@ public class myC45 extends Classifier {
                 this.subtrees = new myC45[2];
                 for (int i = 0; i < 2; i++) {
                     subtrees[i] = new myC45();
-                    subtrees[i].threshold_for_continous = this.threshold_for_continous;
+                    subtrees[i].threshold_for_continous = this.threshold_for_continous; // turunkan threshold
                     System.out.println(split_data[i].numInstances());
                     subtrees[i].makeTree(split_data[i], method);
                 }                
@@ -248,7 +250,7 @@ public class myC45 extends Classifier {
                 this.subtrees = new myC45[chosen_attribute.numValues()];
                 for (int i = 0; i < chosen_attribute.numValues(); i++) {
                     subtrees[i] = new myC45();
-                    subtrees[i].threshold_for_continous = this.threshold_for_continous;
+                    subtrees[i].threshold_for_continous = this.threshold_for_continous; // turunkan threshold
                     subtrees[i].makeTree(split_data[i], method);
                 }                
             this.subtrees = new myC45[chosen_attribute.numValues()];
@@ -256,7 +258,7 @@ public class myC45 extends Classifier {
             // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myC45();
-                subtrees[i].threshold_for_continous = this.threshold_for_continous;
+                subtrees[i].threshold_for_continous = this.threshold_for_continous; // turunkan threshold
                 subtrees[i].makeTree(split_data[i], method);
             }
             }
@@ -286,8 +288,16 @@ public class myC45 extends Classifier {
         if (chosen_attribute == null) {
             return class_value;
         } else {
-            return subtrees[(int)instance.value(chosen_attribute)].
-            classifyInstance(instance);
+            if (chosen_attribute.type() == 0) {
+                if (instance.value(chosen_attribute) > (double) threshold_for_continous.get(chosen_attribute.index())) {
+                    return subtrees[1].classifyInstance(instance);
+                } else {
+                    return subtrees[0].classifyInstance(instance);
+                }
+            } else {
+                return subtrees[(int)instance.value(chosen_attribute)].
+                classifyInstance(instance);
+            }
         }
     }
     
