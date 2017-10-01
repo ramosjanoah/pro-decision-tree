@@ -41,8 +41,13 @@ public class myC45 extends Classifier {
         double entropy = getEntropy(data);
         double remainder = 0;
         Instances[] split_data = splitData(data, attribute);
-    
-        for (int i = 0; i < attribute.numValues(); i++) {
+        int end; // iterasi untuk itung remainder
+        if (attribute.type() == 0) {
+            end = 2; // kalau numeric, cukup 2 iterasi
+        } else {
+            end = attribute.numValues();
+        }
+        for (int i = 0; i < end; i++) {
             if (split_data[i].numInstances() > 0) {
                 remainder += ((double)split_data[i].numInstances() / (double)data.numInstances()) * getEntropy(split_data[i]);
             }

@@ -47,6 +47,7 @@ public class Rule {
         Iterator it = new_nodes_rule.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
+//            if (instance.attribute((int)pair.getKey())
             if (instance.value((int)pair.getKey()) != (double)pair.getValue()) {
                 return false;
             }

@@ -37,19 +37,20 @@ public class Main {
         // TODO code application logic here        
         Evaluation eval;
 
-        Instances contact_lenses = WekaInterface.loadDataset("contact-lenses.arff");
-        Instances contact_lenses_missing = WekaInterface.loadDataset("contact-lenses-missing.arff");
         Instances iris = WekaInterface.loadDataset("iris.arff");        
         Instances weather_nominal = WekaInterface.loadDataset("weather.nominal.arff");
         Instances weather_numeric = WekaInterface.loadDataset("weather.numeric.arff");                
         
         // Construction
-        myID3 id3 = new myID3();
-        myC45 c45 = new myC45();
-        c45.buildClassifier(weather_numeric);
-
-        // eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
-        // System.out.println(eval.toSummaryString());
+        myC45 m = new myC45();
+        m.buildClassifier(weather_nominal);
+        Classifier model = m;
+        
+        System.out.println("myC45 - iris");
+        System.out.println(WekaInterface.classifyInstance(m, weather_nominal.firstInstance()));
+        eval = WekaInterface.evaluateModelCrossValidation(m, 10, weather_nominal);
+        System.out.println(eval.toSummaryString());
+        
 
 
     }
