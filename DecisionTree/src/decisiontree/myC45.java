@@ -135,9 +135,6 @@ public class myC45 extends Classifier {
 
             while (enum_instance.hasMoreElements()) {
                 Instance instance = (Instance) enum_instance.nextElement();
-                //System.out.println(attribute.index());
-                //System.out.println(threshold_for_continous);
-                //System.out.println(threshold_for_continous.get(attribute.index()));
                 if (instance.value(attribute) < (double) threshold_for_continous.get(attribute.index())) {
                     split_data[0].add(instance);
                 } else {
@@ -259,6 +256,7 @@ public class myC45 extends Classifier {
             // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myC45();
+                subtrees[i].threshold_for_continous = this.threshold_for_continous;
                 subtrees[i].makeTree(split_data[i], method);
             }
             }
