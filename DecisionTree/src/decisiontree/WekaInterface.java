@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -215,6 +216,99 @@ public class WekaInterface {
         }
         return subDatasetHash;
     }    
+
+    public static double getInformationGain(Instances data, int attIndex, double splitPoint) {
+        double entropy = getEntropy(data);
+        double remainder = 0;
+        Instances data1 = new Instances(data, data.numInstances());
+        Instances data2 = new Instances(data, data.numInstances());    
+        
+        Enumeration instanceEnumerate = data.enumerateInstances();
+        Instance in;
+        while (instanceEnumerate.hasMoreElements()) {
+            in = (Instance) instanceEnumerate.nextElement();
+            if (in.value(attIndex) < splitPoint) {
+                data1.add(in);
+            } else {
+                data2.add(in);
+            }
+        }
+
+        System.out.println(data1.numInstances());
+        System.out.println(data2.numInstances());
+        remainder += ((double)data1.numInstances() / (double)data1.numInstances()) * getEntropy(data1);
+        remainder += ((double)data2.numInstances() / (double)data2.numInstances()) * getEntropy(data2);              
+    
+        return entropy - remainder;
+    }
+
+    public static double getEntropy(Instances data) {
+
+        double[] number_classes = new double[data.numClasses()];
+        Enumeration enum_instance = data.enumerateInstances();
+    
+        while (enum_instance.hasMoreElements()) {
+            Instance instance = (Instance) enum_instance.nextElement();
+            number_classes[(int)instance.classValue()]++;
+        }
+    
+        double entropy = 0;
+        for (int i = 0; i < data.numClasses(); i++) {
+            if (number_classes[i] > 0) {
+                entropy -= number_classes[i]/(double)data.numInstances() * Utils.log2(number_classes[i]);
+            }
+        }    
+        return entropy + Utils.log2(data.numInstances());
+    }
+    
+    public static double splitPoint(Instances data, int idxToDiscretize) {
+        ArrayList<Double> candidates = new ArrayList<>();
+        double candidate;
+        Instance datum;
+        Instance next;
+        
+        iris.sort(idxToDiscretize);
+
+        Enumeration instanceEnumerate = data.enumerateInstances();
+        datum = (Instance) instanceEnumerate.nextElement();
+        while (instanceEnumerate.hasMoreElements()) {
+            next = (Instance) instanceEnumerate.nextElement();
+            if (datum.classValue() != next.classValue()) {
+                System.out.println("-------------");
+                System.out.println(datum.value(idxToDiscretize));
+                System.out.println(next.value(idxToDiscretize));
+                candidate = (datum.value(idxToDiscretize) + next.value(idxToDiscretize))/2.0;
+                candidates.add(candidate);
+            }
+            datum = next;
+        }
+        System.out.println(candidates);
+        if (candidates.size() > 10) {
+            int random = (int) (Math.random() * candidates.size());
+            candidates.remove(random);
+        }
+        System.out.println(candidates);
+
+        // search best candidates
+        
+        double maxCandidate = candidates.get(0);
+        double tempInformationGainMax = WekaInterface.getInformationGain(data, idxToDiscretize, maxCandidate);
+        double tempInformationGain;
+        Iterator iterateCandidates = candidates.iterator();
+
+        while (iterateCandidates.hasNext()) {
+            candidate = (double) iterateCandidates.next();
+            tempInformationGain = WekaInterface.getInformationGain(data, idxToDiscretize, candidate);
+            System.out.println("if " + tempInformationGain + " > " + tempInformationGainMax);
+            if (tempInformationGain > tempInformationGainMax) {
+                maxCandidate = candidate;
+                tempInformationGainMax = tempInformationGain;
+            }
+            System.out.println(tempInformationGainMax + " win.");
+        }        
+        return maxCandidate;
+    }
+    
     
     
 }

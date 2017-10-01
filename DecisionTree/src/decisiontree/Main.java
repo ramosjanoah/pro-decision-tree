@@ -7,6 +7,7 @@ package decisiontree;
 
 import java.awt.RenderingHints.Key;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -44,12 +45,55 @@ public class Main {
                
         
         // -----------------------------------------
+
         Instances iris = WekaInterface.loadDataset("iris.arff");
         System.out.println(iris);
+
+        int idxToDiscretize = 2;
+        ArrayList<Double> candidates = new ArrayList<>();
+        double candidate;
+        Instance datum;
+        Instance next;
         
+        iris.sort(idxToDiscretize);
+
+        Enumeration instanceEnumerate = iris.enumerateInstances();
+        datum = (Instance) instanceEnumerate.nextElement();
+        while (instanceEnumerate.hasMoreElements()) {
+            next = (Instance) instanceEnumerate.nextElement();
+            if (datum.classValue() != next.classValue()) {
+                System.out.println("-------------");
+                System.out.println(datum.value(idxToDiscretize));
+                System.out.println(next.value(idxToDiscretize));
+                candidate = (datum.value(idxToDiscretize) + next.value(idxToDiscretize))/2.0;
+                candidates.add(candidate);
+            }
+            datum = next;
+        }
+        System.out.println(candidates);
+        if (candidates.size() > 10) {
+            int random = (int) (Math.random() * candidates.size());
+            candidates.remove(random);
+        }
+        System.out.println(candidates);
+
+        // search best candidates
         
-        
-        
-        
+        double maxCandidate = candidates.get(0);
+        double tempInformationGainMax = WekaInterface.getInformationGain(iris, idxToDiscretize, maxCandidate);
+        double tempInformationGain;
+        Iterator iterateCandidates = candidates.iterator();
+
+        while (iterateCandidates.hasNext()) {
+            candidate = (double) iterateCandidates.next();
+            tempInformationGain = WekaInterface.getInformationGain(iris, idxToDiscretize, candidate);
+            System.out.println("if " + tempInformationGain + " > " + tempInformationGainMax);
+            if (tempInformationGain > tempInformationGainMax) {
+                maxCandidate = candidate;
+                tempInformationGainMax = tempInformationGain;
+            }
+            System.out.println(tempInformationGainMax + " win.");
+        }        
+        System.out.println(maxCandidate);
     }
 }
