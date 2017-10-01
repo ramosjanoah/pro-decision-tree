@@ -21,7 +21,7 @@ public class myC45 extends Classifier {
     protected double[] class_distribution;
     protected myC45[] subtrees;
     //The rules used for pruning
-    private ArrayList<Rule> rules;
+    private ArrayList<Rule> rules = new ArrayList<>();
 
     protected double getInformationGain(Instances data, Attribute attribute) {
 
@@ -138,20 +138,19 @@ public class myC45 extends Classifier {
     }
     
     private ArrayList<Rule> get_rules_from_tree(Rule preceding_rule) {
-        System.out.println("PREC " + preceding_rule);
         if (chosen_attribute == null) {
-            preceding_rule.set_classified_value(class_value);
+            Rule current_rule = new Rule(preceding_rule);
+            current_rule.set_classified_value(class_value);
             ArrayList<Rule> current_rules = new ArrayList<>();
-            current_rules.add(preceding_rule);
+            current_rules.add(current_rule);
             return current_rules;
         } else {
-            System.out.println("Iterating subtrees (" + subtrees.length + ")");
             for (int i = 0; i < subtrees.length; ++i) {
                 myC45 c45 = subtrees[i];
-                System.out.println("> " + i + " " + chosen_attribute.name() + " " + chosen_attribute.index());
-                preceding_rule.add_node_rule(chosen_attribute.index(), (double)i);
-                Rule current_rule = preceding_rule;
-                rules.addAll(c45.get_rules_from_tree(current_rule));
+                Rule current_rule = new Rule(preceding_rule);
+                current_rule.add_node_rule(chosen_attribute.index(), (double)i);
+                ArrayList<Rule> results = (ArrayList) c45.get_rules_from_tree(current_rule).clone();
+                rules.addAll(results);
             }
             return rules;
         }
@@ -175,8 +174,9 @@ public class myC45 extends Classifier {
     }
 
     public void print_rules() {
+        System.out.println("RULES: ");
         for(Rule rule : rules) {
-            System.out.println(rule);
+            System.out.println(" > " + rule);
         }
     }
   
