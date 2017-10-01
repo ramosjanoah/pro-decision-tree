@@ -39,8 +39,6 @@ public class Main {
         // TODO code application logic here        
         Evaluation eval;
 
-        Instances contact_lenses = WekaInterface.loadDataset("contact-lenses.arff");
-        Instances contact_lenses_missing = WekaInterface.loadDataset("contact-lenses-missing.arff");
         Instances iris = WekaInterface.loadDataset("iris.arff");        
         Instances weather_nominal = WekaInterface.loadDataset("weather.nominal.arff");
         Instances weather_numeric = WekaInterface.loadDataset("weather.numeric.arff");                
@@ -57,5 +55,6 @@ public class Main {
 
         // eval = WekaInterface.evaluateModelPercentageSplit(c45, 0.8, weather_numeric);
         // System.out.println(eval.toSummaryString());
+
     }
 }
