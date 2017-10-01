@@ -1,6 +1,7 @@
 package decisiontree.c45;
 
 import weka.core.Instance;
+import weka.core.Instances;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,9 +41,18 @@ public class Rule {
         this.classified_value = classified_value;
     }
 
-    public boolean is_match() {
+    public boolean is_match(Instance instance) {
         //not implemented yet
-        return false;
+        HashMap<Integer, Double> new_nodes_rule = new HashMap<>(nodes_rule);
+        Iterator it = new_nodes_rule.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            if (instance.value((int)pair.getKey()) != (double)pair.getValue()) {
+                return false;
+            }
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        return true;
     }
 
     public double get_classified_value() {
@@ -58,8 +68,16 @@ public class Rule {
             result += " | " + pair.getKey() + " = " + pair.getValue();
             it.remove(); // avoids a ConcurrentModificationException
         }
-        result += " | -> " + this.classified_value;
+        result += " |--> " + this.classified_value;
         return result;
+    }
+
+    public void prune(Instances data_train, Instances data_validation) {
+
+    }
+
+    public void remove(int i) {
+        nodes_rule.remove(i);
     }
 
     public static void main(String[] args) {
