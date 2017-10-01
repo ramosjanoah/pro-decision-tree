@@ -312,22 +312,18 @@ public class myC45 extends Classifier {
         data = data.resample(random);
 
         //trian and test percentage
-        double train_pct = 0.5;
-        double test_pct = 0.25;
+        double train_pct = 0.7;
 
         int train_size = (int) Math.round(data.numInstances() * train_pct);
-        int test_size = (int) Math.round(data.numInstances() * test_pct);
-        int validation_size = data.numInstances() - train_size - test_size;
+        int validation_size = data.numInstances() - train_size;
 
         // engineer train test and validation dataset
         Instances data_train = new Instances(data, 0, train_size);
-        Instances data_test = new Instances(data, train_size, test_size);
-        Instances data_validation = new Instances(data, train_size + test_size, validation_size);
-        
+        Instances data_validation = new Instances(data, train_size, validation_size);
+
         System.out.println("Building classifier with:");
         System.out.println(" > Training size  : " + train_size);
         System.out.println(" > Validation size: " + validation_size);
-        System.out.println(" > Testing  size  : " + test_size);
 
         //build the tree and rule
         makeThreshold(data_train);
