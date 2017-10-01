@@ -46,6 +46,9 @@ public class Main {
         id3.buildClassifier(data);
         c45.buildClassifier(data);
         System.out.println(c45);
+        
+//        Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(c45, 10, dataMissing);
+//        System.out.println(eval10CrossValidation.toSummaryString());
 //        c45.get_rules();
 //        c45.print_rules();
 //        System.out.println("DONE BUILDING");
