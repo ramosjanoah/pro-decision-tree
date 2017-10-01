@@ -41,10 +41,15 @@ public class Main {
 
         // Construction
         myID3 tree = new myID3();
+               
         
-        tree.buildClassifier(dataMissing);
+        // -----------------------------------------
+        Instances iris = WekaInterface.loadDataset("iris.arff");
+        System.out.println(iris);
         
         
-        System.out.println(tree.toString());
+        
+        
+        
     }
 }
