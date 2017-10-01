@@ -95,23 +95,24 @@ public class myC45 extends Classifier {
         double[] gains = new double[data.numAttributes()];
 //        Instances data_without_missing = new Instances(data); // -r
 //        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
-        if (method == "information-gain") {
-            double[] information_gains = new double[data.numAttributes()];
-        }
         
         Enumeration enum_attribute = data.enumerateAttributes();
+        //System.out.println(enum_attribute);
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
 //            information_gains[attribute.index()] = getInformationGain(data_without_missing, attribute); // -r
             if (method == "information-gain") {
                 gains[attribute.index()] = getInformationGain(data, attribute);
             } else if (method == "gain-ratio") {
-                gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
+                if (getSplitInformation(data,attribute) == 0){
+                    gains[attribute.index()] = 0;
+                } else {
+                    gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
+                }
             }
             
         }
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
-        //        System.out.println(information_gains[chosen_attribute.index()]);
     
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
@@ -181,7 +182,7 @@ public class myC45 extends Classifier {
     }
   
     public void buildClassifier(Instances data) throws Exception {
-        makeTree(data, "information-gain");
+        makeTree(data, "gain-ratio");
     }
   
     public String toString() {
