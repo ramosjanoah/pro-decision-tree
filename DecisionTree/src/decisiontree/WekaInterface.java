@@ -105,6 +105,7 @@ public class WekaInterface {
     }
     
     public static Evaluation evaluateModelPercentageSplit(Classifier model, double percentage, Instances data) throws Exception {
+        WekaInterface.resampleInstances(data);
         int trainSize = (int) Math.round(data.numInstances() * 0.8);
         int testSize = data.numInstances() - trainSize;
         Instances train = new Instances(data, 0, trainSize);
@@ -119,9 +120,9 @@ public class WekaInterface {
     }
     
     public static void changeMissingValueToCommonValue(Instances data) {
+        System.out.println("changeMissingValueToCommonValue(Instances data)");
         Enumeration instanceEnumerate = data.enumerateInstances();
         HashMap mostMap = mostCommonInstancesMap(data);
-
         while (instanceEnumerate.hasMoreElements()) {
             Enumeration attributeEnumerate = data.enumerateAttributes();
             Instance datum = (Instance) instanceEnumerate.nextElement();
@@ -162,15 +163,17 @@ public class WekaInterface {
             subDataset.add(datum);
         }
         subDatasetHash.put(classIndex, subDataset);        
-
-        subDataset = (Instances) subDatasetHash.get(1.0); 
-        // System.out.println(subDataset.toString());
         
-        // System.out.println(subDataset.attributeStats(0));
+        subDataset = (Instances) subDatasetHash.get(1.0); 
+
+        Iterator iterateSubDatasetHash = subDatasetHash.keySet().iterator();
+        
         HashMap temp = new HashMap();
-        for (double idxClass = 0.0; idxClass < data.numClasses(); idxClass++) {
+        while (iterateSubDatasetHash.hasNext()) {
+            double idxClass = (double) iterateSubDatasetHash.next();
             // System.out.println("----" + idxClass + "----");
             subDataset = (Instances) subDatasetHash.get(idxClass);
+//            System.out.println("idxClass : " + idxClass);
             Enumeration attributeEnumerate = subDataset.enumerateAttributes();
             while (attributeEnumerate.hasMoreElements()) {
                 temp = new HashMap();
@@ -189,21 +192,22 @@ public class WekaInterface {
                 }                
 
                 Iterator keySetIterator = temp.keySet().iterator();
-                double maxIndex = (double)keySetIterator.next();
-                double key = -99;
-                while (keySetIterator.hasNext()) {
-                    key = (double)keySetIterator.next();
-                    int keyValue = (int)temp.get(key);  
-                    int maxIndexValue = (int)temp.get(maxIndex);
-                    if (keyValue > maxIndexValue) {
-                        maxIndex = key;
+                if (keySetIterator.hasNext()) {
+                    double maxIndex = (double)keySetIterator.next();
+                    double key = -99;
+                    while (keySetIterator.hasNext()) {
+                        key = (double)keySetIterator.next();
+                        int keyValue = (int)temp.get(key);  
+                        int maxIndexValue = (int)temp.get(maxIndex);
+                        if (keyValue > maxIndexValue) {
+                            maxIndex = key;
+                        }
                     }
+                    temp.put(-1.0, maxIndex);
+                    // System.out.println(temp);
+                    subDataset.firstInstance().setValue(att, maxIndex);
+                    // System.out.println();
                 }
-                temp.put(-1.0, maxIndex);
-                // System.out.println(temp);
-                subDataset.firstInstance().setValue(att, maxIndex);
-                // System.out.println();
-
             }
             Instances subDatasetTemp = new Instances(data, data.numInstances());
             subDatasetTemp.add(subDataset.firstInstance());
@@ -211,4 +215,6 @@ public class WekaInterface {
         }
         return subDatasetHash;
     }    
+    
+    
 }

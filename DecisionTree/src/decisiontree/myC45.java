@@ -16,7 +16,7 @@ import weka.core.Utils;
  * @author ramosjanoah
  */
 public class myC45 extends myID3 {
-    
+
     public double getSplitInformation(Instances data, Attribute attribute) {
         Instances[] split_data = splitData(data, attribute);
         double split_information = 0;
@@ -43,9 +43,9 @@ public class myC45 extends myID3 {
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
             if (method == "information-gain") {
-                gains[attribute.index()] = getInformationGain(data, attribute);
+                gains[attribute.index()] = super.getInformationGain(data, attribute);
             } else if (method == "gain-ratio") {
-                gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
+                gains[attribute.index()] = super.getInformationGain(data, attribute) / getSplitInformation(data,attribute);
             }
             
         }
@@ -69,13 +69,13 @@ public class myC45 extends myID3 {
 
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myID3();
-                subtrees[i].makeTree(split_data[i]);
+                subtrees[i].makeTree(data);
             }
         }
     }
     
     @Override
     public void buildClassifier(Instances data) throws Exception {
-          makeTree(data,"gain-ratio");
+          makeTree(data,"information-gain");
     }    
 }

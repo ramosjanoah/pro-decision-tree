@@ -68,18 +68,23 @@ public class myID3 extends Classifier {
     }
   
     protected void makeTree(Instances data) throws Exception {
+//        System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
         double[] information_gains = new double[data.numAttributes()];
-        
+//        Instances data_without_missing = new Instances(data); // -r
+//        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
         Enumeration enum_attribute = data.enumerateAttributes();
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
-            information_gains[attribute.index()] = getInformationGain(data, attribute);
+            information_gains[attribute.index()] = getInformationGain(data_without_missing, attribute); 
+//            information_gains[attribute.index()] = getInformationGain(data, attribute); // -r
         }
         chosen_attribute = data.attribute(Utils.maxIndex(information_gains));
+        System.out.println(information_gains[chosen_attribute.index()]);
     
         if (Utils.eq(information_gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
-            class_distribution = new double[data.numClasses()];
+//            class_distribution = new double[data.numClasses()]; 
+            class_distribution = new double[data_without_missing.numClasses()]; // -r
       
             Enumeration enum_instance = data.enumerateInstances();
             while (enum_instance.hasMoreElements()) {

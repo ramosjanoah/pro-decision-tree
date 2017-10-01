@@ -37,26 +37,14 @@ public class Main {
         Evaluation eval;
         
         Instances data = WekaInterface.loadDataset("contact-lenses.arff");
-        Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");
-        
+        Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");        
 
-        WekaInterface.changeMissingValueToCommonValue(dataMissing);
-        
-        // Print Data test
-        // System.out.println(data.toString());
-        
         // Construction
-         myID3 tree = new myID3();
-         myC45 tree2 = new myC45();
+        myID3 tree = new myID3();
         
-        // Training
-         tree.buildClassifier(dataMissing);
+        tree.buildClassifier(dataMissing);
         
-        // Evaluating with data training
-        // Evaluation evalWithDataTraining = WekaInterface.evaluateModelWithInstances(tree, data);
-         Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(tree, 10, dataMissing);
-
-        // Print evaluation summary
-         System.out.println(eval10CrossValidation.toSummaryString());
+        
+        System.out.println(tree.toString());
     }
 }
