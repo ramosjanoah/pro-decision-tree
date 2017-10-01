@@ -15,18 +15,24 @@ import java.util.Iterator;
 import weka.core.*;
 
 @SuppressWarnings("ALL")
-public class myC45 extends Classifier {    
-    public Attribute chosen_attribute;
-    public Attribute class_attribute;
-    public double class_value;
-    public double[] class_distribution;
-    public myC45[] subtrees;
+
+public class myC45 extends Classifier {
+    
+    // atribut yang dipilih untuk menjadi node -> dengan IG / gain-ratio terbesar
+    protected Attribute chosen_attribute;
+    // atribut yang menjadi label / class
+    protected Attribute class_attribute;
+    // label dari suatu instance jika node yang dihasilkan menjadi leaf
+    protected double class_value;
+    // array yang berisi jumlah setiap label yang mungkin dari suatu leaf -> untuk menentukan label dari leaf jika 
+    // label yang dihasilkan tidak konsisten
+    protected double[] class_distribution;
+    // tree penerus dari suatu node
+    protected myC45[] subtrees;
     //The rules used for pruning
-    private ArrayList<Rule> rules;
-    public HashMap threshold_for_continous;
+    private ArrayList<Rule> rules = new ArrayList<>();
 
     protected double getInformationGain(Instances data, Attribute attribute) {
-
         double entropy = getEntropy(data);
         double remainder = 0;
         Instances[] split_data = splitData(data, attribute);
@@ -98,7 +104,6 @@ public class myC45 extends Classifier {
     }
   
     protected double getEntropy(Instances data) {
-
         double[] number_classes = new double[data.numClasses()];
         Enumeration enum_instance = data.enumerateInstances();
     
@@ -118,6 +123,7 @@ public class myC45 extends Classifier {
     }
   
     protected Instances[] splitData(Instances data, Attribute attribute) {
+<<<<<<< HEAD
         if (attribute.type() == 0) {
             int indexAttribute = attribute.index();
             Instances[] split_data = new Instances[2];
@@ -153,6 +159,21 @@ public class myC45 extends Classifier {
             }
 
             return split_data;
+=======
+        // splitData memisahkan data untuk atribut tertentu
+        // menghasilkan data dengan nilai atribut yang sama, misal data[1] nilai atributnya 'sunny' semua,
+        // data[2] nilai atributnya 'rainy' semua
+        Instances[] split_data = new Instances[attribute.numValues()];
+    
+        for (int i = 0; i < attribute.numValues(); i++) {
+            split_data[i] = new Instances(data, data.numInstances());
+        }
+    
+        Enumeration enum_instance = data.enumerateInstances();
+        while (enum_instance.hasMoreElements()) {
+            Instance instance = (Instance) enum_instance.nextElement();
+            split_data[(int)instance.value(attribute)].add(instance);
+>>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
         }
     }
     
@@ -190,6 +211,7 @@ public class myC45 extends Classifier {
         
         Enumeration enum_attribute = data.enumerateAttributes();
         //System.out.println(enum_attribute);
+        // menghitung IG atau gain-ratio untuk penentuan node
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
             if (method == "information-gain") {
@@ -202,6 +224,7 @@ public class myC45 extends Classifier {
                 }
             }
         }
+<<<<<<< HEAD
 
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
         System.out.println("-----------");
@@ -211,6 +234,12 @@ public class myC45 extends Classifier {
         }
         System.out.println("choosen : " + chosen_attribute.index());
 
+=======
+        // node yang dipilih merupakan node dengan nilai IG atau gain-ratio terbesar
+        chosen_attribute = data.attribute(Utils.maxIndex(gains));
+    
+        // jika nilai IG atau gain-ratio nya 0 -> dijadikan leaf
+>>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()];
@@ -220,11 +249,14 @@ public class myC45 extends Classifier {
                 Instance instance = (Instance) enum_instance.nextElement();
                 class_distribution[(int)instance.classValue()]++;
             }
-      
+            // nilai leafnya merupakan max dari semua nilai leaf yang mungkin
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
-        } else {
+        } else { 
+            // jika bukan leaf, cari lagi atribut terpilih dengan data yang sudah dikelompokkan
+            // berdasarkan atribut yang terpilih jadi node
             Instances[] split_data = splitData(data, chosen_attribute);
+<<<<<<< HEAD
 
             if (chosen_attribute.type() == 0) {
                 this.subtrees = new myC45[2];
@@ -241,25 +273,32 @@ public class myC45 extends Classifier {
                     subtrees[i].threshold_for_continous = this.threshold_for_continous;
                     subtrees[i].makeTree(split_data[i], method);
                 }                
+=======
+            this.subtrees = new myC45[chosen_attribute.numValues()];
+            
+            // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
+            for (int i = 0; i < chosen_attribute.numValues(); i++) {
+                subtrees[i] = new myC45();
+                subtrees[i].makeTree(split_data[i], method);
+>>>>>>> 838fc9fb60e618eceed650ad7ae35f8e783d181c
             }
         }
     }
     
     private ArrayList<Rule> get_rules_from_tree(Rule preceding_rule) {
-        System.out.println("PREC " + preceding_rule);
         if (chosen_attribute == null) {
-            preceding_rule.set_classified_value(class_value);
+            Rule current_rule = new Rule(preceding_rule);
+            current_rule.set_classified_value(class_value);
             ArrayList<Rule> current_rules = new ArrayList<>();
-            current_rules.add(preceding_rule);
+            current_rules.add(current_rule);
             return current_rules;
         } else {
-            System.out.println("Iterating subtrees (" + subtrees.length + ")");
             for (int i = 0; i < subtrees.length; ++i) {
                 myC45 c45 = subtrees[i];
-                System.out.println("> " + i + " " + chosen_attribute.name() + " " + chosen_attribute.index());
-                preceding_rule.add_node_rule(chosen_attribute.index(), (double)i);
-                Rule current_rule = preceding_rule;
-                rules.addAll(c45.get_rules_from_tree(current_rule));
+                Rule current_rule = new Rule(preceding_rule);
+                current_rule.add_node_rule(chosen_attribute.index(), (double)i);
+                ArrayList<Rule> results = (ArrayList) c45.get_rules_from_tree(current_rule).clone();
+                rules.addAll(results);
             }
             return rules;
         }
@@ -283,8 +322,9 @@ public class myC45 extends Classifier {
     }
 
     public void print_rules() {
+        System.out.println("RULES: ");
         for(Rule rule : rules) {
-            System.out.println(rule);
+            System.out.println(" > " + rule);
         }
     }
   

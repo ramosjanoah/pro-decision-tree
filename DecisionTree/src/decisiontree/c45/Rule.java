@@ -8,18 +8,21 @@ import java.util.Map;
 
 public class Rule {
     //The instance the rule is based off
-    private Instance instance;
     private HashMap<Integer, Double> nodes_rule = new HashMap<>();
     private double classified_value;
 
     public Rule() {
-        this.instance = null;
         this.classified_value = -1;
     }
 
-    public Rule(Instance instance, double classified_value) {
-        this.instance = instance;
-        this.classified_value = classified_value;
+    public Rule(Rule rule) {
+        this.nodes_rule = new HashMap<>(rule.nodes_rule);
+        for (Map.Entry<Integer, Double> entry : rule.nodes_rule.entrySet()) {
+            Integer key = entry.getKey();
+            Double value = entry.getValue();
+            this.nodes_rule.put(key, value);
+        }
+        this.classified_value = rule.classified_value;
     }
 
     public boolean is_complete() {
@@ -47,15 +50,15 @@ public class Rule {
     }
 
     public String toString() {
-        String result = "RULES:\n";
-        Iterator it = nodes_rule.entrySet().iterator();
+        String result = "";
+        HashMap<Integer, Double> new_nodes_rule = new HashMap<>(nodes_rule);
+        Iterator it = new_nodes_rule.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             result += " | " + pair.getKey() + " = " + pair.getValue();
             it.remove(); // avoids a ConcurrentModificationException
         }
-        result += "\n";
-        result += "CLASSIFIED VALUE: " + this.classified_value;
+        result += " | -> " + this.classified_value;
         return result;
     }
 
