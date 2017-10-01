@@ -122,7 +122,7 @@ public class WekaInterface {
     }
     
     public static void changeMissingValueToCommonValue(Instances data) {
-        System.out.println("changeMissingValueToCommonValue(Instances data)");
+        //System.out.println("changeMissingValueToCommonValue(Instances data)");
         Enumeration instanceEnumerate = data.enumerateInstances();
         HashMap mostMap = mostCommonInstancesMap(data);
         while (instanceEnumerate.hasMoreElements()) {
@@ -234,12 +234,9 @@ public class WekaInterface {
                 data2.add(in);
             }
         }
-
-        System.out.println(data1.numInstances());
-        System.out.println(data2.numInstances());
-        remainder += ((double)data1.numInstances() / (double)data1.numInstances()) * getEntropy(data1);
-        remainder += ((double)data2.numInstances() / (double)data2.numInstances()) * getEntropy(data2);              
-    
+        remainder += ((double)data1.numInstances() / (double)data.numInstances()) * getEntropy(data1);
+        remainder += ((double)data2.numInstances() / (double)data.numInstances()) * getEntropy(data2);              
+        System.out.println(splitPoint + " : " + (entropy - remainder));
         return entropy - remainder;
     }
 
@@ -263,6 +260,8 @@ public class WekaInterface {
     }
     
     public static double splitPoint(Instances data, int idxToDiscretize) {
+        // search splitPoint. Done right
+        // sort berdasarkan atribute -> kumpulin candidate threshold -> cari threshold yang paling baik IG nya
         ArrayList<Double> candidates = new ArrayList<>();
         double candidate;
         Instance datum;
@@ -308,17 +307,5 @@ public class WekaInterface {
             System.out.println(tempInformationGainMax + " win.");
         }        
         return maxCandidate;
-    }
-    
-    public static void myDiscretize(Instances data, int attIndex, double splitPoint) {
-        ArrayList<String> nominal_values = new ArrayList(2); 
-        nominal_values.add("below_split"); 
-        nominal_values.add("above_split"); 
-        
-        // undone...
-        // you should call splitPoint()
-        // ..
-        // ..
-        
     }
 }

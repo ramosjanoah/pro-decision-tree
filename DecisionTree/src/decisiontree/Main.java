@@ -37,27 +37,22 @@ public class Main {
         // TODO code application logic here        
         Evaluation eval;
 
-        Instances data = WekaInterface.loadDataset("contact-lenses.arff");
-        Instances dataMissing = WekaInterface.loadDataset("contact-lenses-missing.arff");
-
+        Instances contact_lenses = WekaInterface.loadDataset("contact-lenses.arff");
+        Instances contact_lenses_missing = WekaInterface.loadDataset("contact-lenses-missing.arff");
+        Instances iris = WekaInterface.loadDataset("iris.arff");        
+        Instances weather_nominal = WekaInterface.loadDataset("weather.nominal.arff");
+        Instances weather_numeric = WekaInterface.loadDataset("weather.numeric.arff");                
+        
         // Construction
         myID3 id3 = new myID3();
         myC45 c45 = new myC45();
-        id3.buildClassifier(data);
-        c45.buildClassifier(data);
-        System.out.println(c45);
-        
-//        Evaluation eval10CrossValidation = WekaInterface.evaluateModelCrossValidation(c45, 10, dataMissing);
-//        System.out.println(eval10CrossValidation.toSummaryString());
-        c45.print_rules();
-        System.out.println("DONE BUILDING");
-               
-        
-        // -----------------------------------------
-        
-        Instances iris = WekaInterface.loadDataset("contact-lenses.arff");        
-        WekaInterface.myDiscretize(data, 1, 2.0);
+        weather_numeric.sort(1);
+        System.out.println(weather_numeric);
+        weather_numeric.sort(2);
+        System.out.println(weather_numeric);
+        c45.buildClassifier(weather_numeric);
 
+        System.out.println(c45);        
     }
 
 }
