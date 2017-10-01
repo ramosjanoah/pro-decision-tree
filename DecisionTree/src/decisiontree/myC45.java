@@ -16,11 +16,11 @@ import weka.core.*;
 
 @SuppressWarnings("ALL")
 public class myC45 extends Classifier {    
-    protected Attribute chosen_attribute;
-    protected Attribute class_attribute;
-    protected double class_value;
-    protected double[] class_distribution;
-    protected myC45[] subtrees;
+    public Attribute chosen_attribute;
+    public Attribute class_attribute;
+    public double class_value;
+    public double[] class_distribution;
+    public myC45[] subtrees;
     //The rules used for pruning
     private ArrayList<Rule> rules;
     public HashMap threshold_for_continous;
@@ -53,9 +53,6 @@ public class myC45 extends Classifier {
         while (instanceEnumerate.hasMoreElements()) {
             next = (Instance) instanceEnumerate.nextElement();
             if (datum.classValue() != next.classValue()) {
-                //System.out.println("-------------");
-                //System.out.println(datum.value(idxToDiscretize));
-                //System.out.println(next.value(idxToDiscretize));
                 candidate = (datum.value(idxToDiscretize) + next.value(idxToDiscretize))/2.0;
                 candidates.add(candidate);
             }
@@ -66,7 +63,7 @@ public class myC45 extends Classifier {
             int random = (int) (Math.random() * candidates.size());
             candidates.remove(random);
         }
-        //System.out.println(candidates);
+        System.out.println(candidates);
 
         // search best candidates
         
@@ -82,7 +79,7 @@ public class myC45 extends Classifier {
                 maxCandidate = candidate;
                 tempInformationGainMax = tempInformationGain;
             }
-        }        
+        }
         return maxCandidate;
     }
 
@@ -98,7 +95,6 @@ public class myC45 extends Classifier {
                 threshold_for_continous.put(att.index(), threshold);
             }
         }
-        
     }
   
     protected double getEntropy(Instances data) {
@@ -131,6 +127,9 @@ public class myC45 extends Classifier {
 
             while (enum_instance.hasMoreElements()) {
                 Instance instance = (Instance) enum_instance.nextElement();
+                //System.out.println(attribute.index());
+                //System.out.println(threshold_for_continous);
+                //System.out.println(threshold_for_continous.get(attribute.index()));
                 if (instance.value(attribute) < (double) threshold_for_continous.get(attribute.index())) {
                     split_data[0].add(instance);
                 } else {
@@ -160,14 +159,19 @@ public class myC45 extends Classifier {
     public double getSplitInformation(Instances data, Attribute attribute) {
         Instances[] split_data = splitData(data, attribute);
         double split_information = 0;
-    
-        for (int i = 0; i < attribute.numValues(); i++) {
+        int end;
+        if (attribute.type() != 0) {
+            end = attribute.numValues();
+        } else {
+            end = 2;
+        }
+        
+        for (int i = 0; i < end; i++) {
             if (split_data[i].numInstances() > 0) {
                 double ratio_value = (double)split_data[i].numInstances() / (double)data.numInstances();
                 split_information += ratio_value * Utils.log2(ratio_value);
             }
         }
-        
         split_information = (-1) * split_information;
         
         return split_information;
@@ -175,7 +179,9 @@ public class myC45 extends Classifier {
   
     protected void makeTree(Instances data, String method) throws Exception {
         //System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
+//        System.out.println(data.toString());
         double[] gains = new double[data.numAttributes()];
+
         Instances data_without_missing = new Instances(data); // -r
         WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
         if (method == "information-gain") {
@@ -183,17 +189,28 @@ public class myC45 extends Classifier {
         }
         
         Enumeration enum_attribute = data.enumerateAttributes();
+        //System.out.println(enum_attribute);
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
             if (method == "information-gain") {
                 gains[attribute.index()] = getInformationGain(data_without_missing, attribute);
             } else if (method == "gain-ratio") {
-                gains[attribute.index()] = getInformationGain(data_without_missing, attribute) / getSplitInformation(data_without_missing,attribute);
-            }            
+                if (getSplitInformation(data_without_missing,attribute) == 0){
+                    gains[attribute.index()] = 0;
+                } else {
+                    gains[attribute.index()] = getInformationGain(data_without_missing, attribute) / getSplitInformation(data_without_missing,attribute);
+                }
+            }
         }
+
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
-        //System.out.println(information_gains[chosen_attribute.index()]);
-    
+        System.out.println("-----------");
+        System.out.println("numInstance : " + data.numInstances());
+        for (int i = 0; i < data.numAttributes(); i++) {
+            System.out.println(i + " : " + gains[i]);
+        }
+        System.out.println("choosen : " + chosen_attribute.index());
+
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()];
@@ -208,11 +225,22 @@ public class myC45 extends Classifier {
             class_attribute = data.classAttribute();
         } else {
             Instances[] split_data = splitData(data, chosen_attribute);
-            this.subtrees = new myC45[chosen_attribute.numValues()];
 
-            for (int i = 0; i < chosen_attribute.numValues(); i++) {
-                subtrees[i] = new myC45();
-                subtrees[i].makeTree(split_data[i], method);
+            if (chosen_attribute.type() == 0) {
+                this.subtrees = new myC45[2];
+                for (int i = 0; i < 2; i++) {
+                    subtrees[i] = new myC45();
+                    subtrees[i].threshold_for_continous = this.threshold_for_continous;
+                    System.out.println(split_data[i].numInstances());
+                    subtrees[i].makeTree(split_data[i], method);
+                }                
+            } else {
+                this.subtrees = new myC45[chosen_attribute.numValues()];
+                for (int i = 0; i < chosen_attribute.numValues(); i++) {
+                    subtrees[i] = new myC45();
+                    subtrees[i].threshold_for_continous = this.threshold_for_continous;
+                    subtrees[i].makeTree(split_data[i], method);
+                }                
             }
         }
     }
@@ -262,7 +290,8 @@ public class myC45 extends Classifier {
   
     public void buildClassifier(Instances data) throws Exception {
         makeThreshold(data);
-        makeTree(data, "information-gain");
+        System.out.println(threshold_for_continous);
+        makeTree(data, "gain-ratio");
     }
   
     public String toString() {
@@ -305,7 +334,7 @@ public class myC45 extends Classifier {
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * and open the template in the editor
  */
 //package decisiontree;
 //

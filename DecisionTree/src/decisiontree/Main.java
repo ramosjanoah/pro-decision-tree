@@ -46,12 +46,14 @@ public class Main {
         // Construction
         myID3 id3 = new myID3();
         myC45 c45 = new myC45();
-        id3.buildClassifier(contact_lenses);
-        c45.buildClassifier(iris);
+        weather_numeric.sort(1);
+        System.out.println(weather_numeric);
+        weather_numeric.sort(2);
+        System.out.println(weather_numeric);
+        c45.buildClassifier(weather_numeric);
 
-        System.out.println(c45);
-        System.out.println(c45.threshold_for_continous);          
-        // -----------------------------------------        
+        System.out.println(c45);        
+
     }
 
 }

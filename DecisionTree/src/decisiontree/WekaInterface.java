@@ -122,7 +122,7 @@ public class WekaInterface {
     }
     
     public static void changeMissingValueToCommonValue(Instances data) {
-        System.out.println("changeMissingValueToCommonValue(Instances data)");
+        //System.out.println("changeMissingValueToCommonValue(Instances data)");
         Enumeration instanceEnumerate = data.enumerateInstances();
         HashMap mostMap = mostCommonInstancesMap(data);
         while (instanceEnumerate.hasMoreElements()) {
@@ -234,9 +234,9 @@ public class WekaInterface {
                 data2.add(in);
             }
         }
-        remainder += ((double)data1.numInstances() / (double)data1.numInstances()) * getEntropy(data1);
-        remainder += ((double)data2.numInstances() / (double)data2.numInstances()) * getEntropy(data2);              
-    
+        remainder += ((double)data1.numInstances() / (double)data.numInstances()) * getEntropy(data1);
+        remainder += ((double)data2.numInstances() / (double)data.numInstances()) * getEntropy(data2);              
+        System.out.println(splitPoint + " : " + (entropy - remainder));
         return entropy - remainder;
     }
 
