@@ -11,10 +11,16 @@ import weka.core.Utils;
 @SuppressWarnings("ALL")
 public class myID3 extends Classifier {
     
+    // atribut yang dipilih untuk menjadi node -> dengan IG / gain-ratio terbesar
     protected Attribute chosen_attribute;
+    // atribut yang menjadi label / class
     protected Attribute class_attribute;
+    // label dari suatu instance jika node yang dihasilkan menjadi leaf
     protected double class_value;
+    // array yang berisi jumlah label dari suatu leaf -> untuk menentukan label dari leaf jika 
+    // label yang dihasilkan tidak konsisten
     protected double[] class_distribution;
+    // tree penerus dari suatu node
     protected myID3[] subtrees;
 
     protected double getInformationGain(Instances data, Attribute attribute) {
@@ -53,6 +59,9 @@ public class myID3 extends Classifier {
     }
   
     protected Instances[] splitData(Instances data, Attribute attribute) {
+        // splitData memisahkan data untuk atribut tertentu
+        // menghasilkan data dengan nilai atribut yang sama, misal data[1] nilai atributnya 'sunny' semua,
+        // data[2] nilai atributnya 'rainy' semua
         Instances[] split_data = new Instances[attribute.numValues()];
     
         for (int i = 0; i < attribute.numValues(); i++) {
@@ -74,14 +83,17 @@ public class myID3 extends Classifier {
 //        Instances data_without_missing = new Instances(data); // -r
 //        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
         Enumeration enum_attribute = data.enumerateAttributes();
+        // menghitung IG untuk penentuan node
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
 //            information_gains[attribute.index()] = getInformationGain(data_without_missing, attribute); // -r
             information_gains[attribute.index()] = getInformationGain(data, attribute); 
         }
+        // node yang dipilih merupakan node dengan nilai IG terbesar
         chosen_attribute = data.attribute(Utils.maxIndex(information_gains));
 //        System.out.println(information_gains[chosen_attribute.index()]);
     
+        // jika nilai IG nya 0 -> dijadikan leaf
         if (Utils.eq(information_gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()]; 
@@ -92,13 +104,16 @@ public class myID3 extends Classifier {
                 Instance instance = (Instance) enum_instance.nextElement();
                 class_distribution[(int)instance.classValue()]++;
             }
-      
+            // nilai leafnya merupakan max dari semua nilai leaf yang mungkin
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
         } else {
+            // jika bukan leaf, cari lagi atribut terpilih dengan data yang sudah dikelompokkan
+            // berdasarkan atribut yang terpilih jadi node
             Instances[] split_data = splitData(data, chosen_attribute);
             subtrees = new myID3[chosen_attribute.numValues()];
 
+            // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myID3();
                 subtrees[i].makeTree(split_data[i]);

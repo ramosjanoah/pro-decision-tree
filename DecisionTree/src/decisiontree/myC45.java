@@ -15,16 +15,21 @@ import weka.core.*;
 @SuppressWarnings("ALL")
 public class myC45 extends Classifier {
     
+    // atribut yang dipilih untuk menjadi node -> dengan IG / gain-ratio terbesar
     protected Attribute chosen_attribute;
+    // atribut yang menjadi label / class
     protected Attribute class_attribute;
+    // label dari suatu instance jika node yang dihasilkan menjadi leaf
     protected double class_value;
+    // array yang berisi jumlah setiap label yang mungkin dari suatu leaf -> untuk menentukan label dari leaf jika 
+    // label yang dihasilkan tidak konsisten
     protected double[] class_distribution;
+    // tree penerus dari suatu node
     protected myC45[] subtrees;
     //The rules used for pruning
     private ArrayList<Rule> rules = new ArrayList<>();
 
     protected double getInformationGain(Instances data, Attribute attribute) {
-
         double entropy = getEntropy(data);
         double remainder = 0;
         Instances[] split_data = splitData(data, attribute);
@@ -39,7 +44,6 @@ public class myC45 extends Classifier {
     }
   
     protected double getEntropy(Instances data) {
-
         double[] number_classes = new double[data.numClasses()];
         Enumeration enum_instance = data.enumerateInstances();
     
@@ -59,6 +63,9 @@ public class myC45 extends Classifier {
     }
   
     protected Instances[] splitData(Instances data, Attribute attribute) {
+        // splitData memisahkan data untuk atribut tertentu
+        // menghasilkan data dengan nilai atribut yang sama, misal data[1] nilai atributnya 'sunny' semua,
+        // data[2] nilai atributnya 'rainy' semua
         Instances[] split_data = new Instances[attribute.numValues()];
     
         for (int i = 0; i < attribute.numValues(); i++) {
@@ -95,24 +102,28 @@ public class myC45 extends Classifier {
         double[] gains = new double[data.numAttributes()];
 //        Instances data_without_missing = new Instances(data); // -r
 //        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
-        if (method == "information-gain") {
-            double[] information_gains = new double[data.numAttributes()];
-        }
         
         Enumeration enum_attribute = data.enumerateAttributes();
+        //System.out.println(enum_attribute);
+        // menghitung IG atau gain-ratio untuk penentuan node
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
 //            information_gains[attribute.index()] = getInformationGain(data_without_missing, attribute); // -r
             if (method == "information-gain") {
                 gains[attribute.index()] = getInformationGain(data, attribute);
             } else if (method == "gain-ratio") {
-                gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
+                if (getSplitInformation(data,attribute) == 0){
+                    gains[attribute.index()] = 0;
+                } else {
+                    gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
+                }
             }
             
         }
+        // node yang dipilih merupakan node dengan nilai IG atau gain-ratio terbesar
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
-        //        System.out.println(information_gains[chosen_attribute.index()]);
     
+        // jika nilai IG atau gain-ratio nya 0 -> dijadikan leaf
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()];
@@ -123,13 +134,16 @@ public class myC45 extends Classifier {
                 Instance instance = (Instance) enum_instance.nextElement();
                 class_distribution[(int)instance.classValue()]++;
             }
-      
+            // nilai leafnya merupakan max dari semua nilai leaf yang mungkin
             class_value = Utils.maxIndex(class_distribution);
             class_attribute = data.classAttribute();
-        } else {
+        } else { 
+            // jika bukan leaf, cari lagi atribut terpilih dengan data yang sudah dikelompokkan
+            // berdasarkan atribut yang terpilih jadi node
             Instances[] split_data = splitData(data, chosen_attribute);
             this.subtrees = new myC45[chosen_attribute.numValues()];
-
+            
+            // untuk setiap jenis value atribut terpilih dicari lagi atribut yang jadi node apa
             for (int i = 0; i < chosen_attribute.numValues(); i++) {
                 subtrees[i] = new myC45();
                 subtrees[i].makeTree(split_data[i], method);
@@ -181,7 +195,7 @@ public class myC45 extends Classifier {
     }
   
     public void buildClassifier(Instances data) throws Exception {
-        makeTree(data, "information-gain");
+        makeTree(data, "gain-ratio");
     }
   
     public String toString() {
