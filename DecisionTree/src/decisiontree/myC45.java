@@ -10,11 +10,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 import decisiontree.c45.Rule;
+import java.util.HashMap;
+import java.util.Iterator;
 import weka.core.*;
 
 @SuppressWarnings("ALL")
-public class myC45 extends Classifier {
-    
+public class myC45 extends Classifier {    
     protected Attribute chosen_attribute;
     protected Attribute class_attribute;
     protected double class_value;
@@ -22,6 +23,7 @@ public class myC45 extends Classifier {
     protected myC45[] subtrees;
     //The rules used for pruning
     private ArrayList<Rule> rules;
+    public HashMap threshold_for_continous;
 
     protected double getInformationGain(Instances data, Attribute attribute) {
 
@@ -36,6 +38,67 @@ public class myC45 extends Classifier {
         }
     
         return entropy - remainder;
+    }
+
+    protected double splitPoint(Instances data, int idxToDiscretize) {
+        ArrayList<Double> candidates = new ArrayList<>();
+        double candidate;
+        Instance datum;
+        Instance next;
+        
+        data.sort(idxToDiscretize);
+
+        Enumeration instanceEnumerate = data.enumerateInstances();
+        datum = (Instance) instanceEnumerate.nextElement();
+        while (instanceEnumerate.hasMoreElements()) {
+            next = (Instance) instanceEnumerate.nextElement();
+            if (datum.classValue() != next.classValue()) {
+                //System.out.println("-------------");
+                //System.out.println(datum.value(idxToDiscretize));
+                //System.out.println(next.value(idxToDiscretize));
+                candidate = (datum.value(idxToDiscretize) + next.value(idxToDiscretize))/2.0;
+                candidates.add(candidate);
+            }
+            datum = next;
+        }
+        //System.out.println(candidates);
+        if (candidates.size() > 10) {
+            int random = (int) (Math.random() * candidates.size());
+            candidates.remove(random);
+        }
+        //System.out.println(candidates);
+
+        // search best candidates
+        
+        double maxCandidate = candidates.get(0);
+        double tempInformationGainMax = WekaInterface.getInformationGain(data, idxToDiscretize, maxCandidate);
+        double tempInformationGain;
+        Iterator iterateCandidates = candidates.iterator();
+
+        while (iterateCandidates.hasNext()) {
+            candidate = (double) iterateCandidates.next();
+            tempInformationGain = WekaInterface.getInformationGain(data, idxToDiscretize, candidate);
+            if (tempInformationGain > tempInformationGainMax) {
+                maxCandidate = candidate;
+                tempInformationGainMax = tempInformationGain;
+            }
+        }        
+        return maxCandidate;
+    }
+
+    
+    protected void makeThreshold(Instances data) {
+        // build threshold
+        threshold_for_continous = new HashMap();
+        Enumeration attEnumerate = data.enumerateAttributes();
+        while (attEnumerate.hasMoreElements()) {
+            Attribute att = (Attribute) attEnumerate.nextElement();
+            if (att.type() == 0) {
+                double threshold = splitPoint(data,att.index());
+                threshold_for_continous.put(att.index(), threshold);
+            }
+        }
+        
     }
   
     protected double getEntropy(Instances data) {
@@ -59,19 +122,39 @@ public class myC45 extends Classifier {
     }
   
     protected Instances[] splitData(Instances data, Attribute attribute) {
-        Instances[] split_data = new Instances[attribute.numValues()];
-    
-        for (int i = 0; i < attribute.numValues(); i++) {
-            split_data[i] = new Instances(data, data.numInstances());
+        if (attribute.type() == 0) {
+            int indexAttribute = attribute.index();
+            Instances[] split_data = new Instances[2];
+            split_data[0] = new Instances(data, data.numInstances());
+            split_data[1] = new Instances(data, data.numInstances());
+            Enumeration enum_instance = data.enumerateInstances();
+
+            while (enum_instance.hasMoreElements()) {
+                Instance instance = (Instance) enum_instance.nextElement();
+                if (instance.value(attribute) < (double) threshold_for_continous.get(attribute.index())) {
+                    split_data[0].add(instance);
+                } else {
+                    split_data[1].add(instance);
+                }
+            }
+
+            return split_data;            
+            
+        } else {
+            Instances[] split_data = new Instances[attribute.numValues()];
+
+            for (int i = 0; i < attribute.numValues(); i++) {
+                split_data[i] = new Instances(data, data.numInstances());
+            }
+
+            Enumeration enum_instance = data.enumerateInstances();
+            while (enum_instance.hasMoreElements()) {
+                Instance instance = (Instance) enum_instance.nextElement();
+                split_data[(int)instance.value(attribute)].add(instance);
+            }
+
+            return split_data;
         }
-    
-        Enumeration enum_instance = data.enumerateInstances();
-        while (enum_instance.hasMoreElements()) {
-            Instance instance = (Instance) enum_instance.nextElement();
-            split_data[(int)instance.value(attribute)].add(instance);
-        }
-        
-        return split_data;
     }
     
     public double getSplitInformation(Instances data, Attribute attribute) {
@@ -91,10 +174,10 @@ public class myC45 extends Classifier {
     }
   
     protected void makeTree(Instances data, String method) throws Exception {
-        //        System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
+        //System.out.println("makeTree(Instances data), num instance : " + data.numInstances()); // -r
         double[] gains = new double[data.numAttributes()];
-//        Instances data_without_missing = new Instances(data); // -r
-//        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
+        Instances data_without_missing = new Instances(data); // -r
+        WekaInterface.changeMissingValueToCommonValue(data_without_missing); // -r
         if (method == "information-gain") {
             double[] information_gains = new double[data.numAttributes()];
         }
@@ -102,21 +185,18 @@ public class myC45 extends Classifier {
         Enumeration enum_attribute = data.enumerateAttributes();
         while (enum_attribute.hasMoreElements()) {
             Attribute attribute = (Attribute) enum_attribute.nextElement();
-//            information_gains[attribute.index()] = getInformationGain(data_without_missing, attribute); // -r
             if (method == "information-gain") {
-                gains[attribute.index()] = getInformationGain(data, attribute);
+                gains[attribute.index()] = getInformationGain(data_without_missing, attribute);
             } else if (method == "gain-ratio") {
-                gains[attribute.index()] = getInformationGain(data, attribute) / getSplitInformation(data,attribute);
-            }
-            
+                gains[attribute.index()] = getInformationGain(data_without_missing, attribute) / getSplitInformation(data_without_missing,attribute);
+            }            
         }
         chosen_attribute = data.attribute(Utils.maxIndex(gains));
-        //        System.out.println(information_gains[chosen_attribute.index()]);
+        //System.out.println(information_gains[chosen_attribute.index()]);
     
         if (Utils.eq(gains[chosen_attribute.index()], 0)) {
             chosen_attribute = null;
             class_distribution = new double[data.numClasses()];
-            //            class_distribution = new double[data_without_missing.numClasses()]; // -r
       
             Enumeration enum_instance = data.enumerateInstances();
             while (enum_instance.hasMoreElements()) {
@@ -181,6 +261,7 @@ public class myC45 extends Classifier {
     }
   
     public void buildClassifier(Instances data) throws Exception {
+        makeThreshold(data);
         makeTree(data, "information-gain");
     }
   

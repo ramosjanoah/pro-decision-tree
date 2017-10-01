@@ -234,9 +234,6 @@ public class WekaInterface {
                 data2.add(in);
             }
         }
-
-        System.out.println(data1.numInstances());
-        System.out.println(data2.numInstances());
         remainder += ((double)data1.numInstances() / (double)data1.numInstances()) * getEntropy(data1);
         remainder += ((double)data2.numInstances() / (double)data2.numInstances()) * getEntropy(data2);              
     
